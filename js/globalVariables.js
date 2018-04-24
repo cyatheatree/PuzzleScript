@@ -77,3 +77,5 @@ var initLevel = {
 };
 
 var level = initLevel;
+
+window.SIZE = 8

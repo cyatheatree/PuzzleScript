@@ -161,7 +161,7 @@ var codeMirrorFn = function() {
     var reg_name = /[\w]+\s*/;///\w*[a-uw-zA-UW-Z0-9_]/;
     var reg_number = /[\d]+/;
     var reg_soundseed = /\d+\b/;
-    var reg_spriterow = /[\.0-9]{5}\s*/;
+    var reg_spriterow = new RegExp("[\.0-9]{" + SIZE + "}\s*");
     var reg_sectionNames = /(objects|collisionlayers|legend|sounds|rules|winconditions|levels)(?![\w])\s*/;
     var reg_equalsrow = /[\=]+/;
     var reg_notcommentstart = /[^\(]+/;
@@ -452,7 +452,7 @@ var codeMirrorFn = function() {
                             if (match_name == null) {
                                 stream.match(reg_notcommentstart, true);
                                 if (stream.pos>0){                                
-                                    logWarning('Unknown junk in object section (possibly: sprites have to be 5 pixels wide and 5 pixels high exactly. Or maybe: the main names for objects have to be words containing only the letters a-z0.9 - if you want to call them something like ",", do it in the legend section).',state.lineNumber);
+                                    logWarning('Unknown junk in object section (possibly: sprites have to be ' + SIZE + ' pixels wide and ' + SIZE + ' pixels high exactly. Or maybe: the main names for objects have to be words containing only the letters a-z0.9 - if you want to call them something like ",", do it in the legend section).',state.lineNumber);
                                 }
                                 return 'ERROR';
                             } else {
@@ -552,13 +552,13 @@ var codeMirrorFn = function() {
                                 var o = state.objects[state.objects_candname];
 
                                 spritematrix[spritematrix.length - 1] += ch;
-                                if (spritematrix[spritematrix.length-1].length>5){
-                                    logError('Sprites must be 5 wide and 5 high.', state.lineNumber);
+                                if (spritematrix[spritematrix.length-1].length > SIZE){
+                                    logError('Sprites must be ' + SIZE + ' wide and ' + SIZE + ' high.', state.lineNumber);
                                     stream.match(reg_notcommentstart, true);
                                     return null;
                                 }
                                 o.spritematrix = state.objects_spritematrix;
-                                if (spritematrix.length === 5 && spritematrix[spritematrix.length - 1].length == 5) {
+                                if (spritematrix.length === SIZE && spritematrix[spritematrix.length - 1].length === SIZE) {
                                     state.objects_section = 0;
                                 }
 
