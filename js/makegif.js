@@ -59,8 +59,18 @@ function makeGIF() {
 	}
 
   	encoder.finish();
-  	var dat = 'data:image/gif;base64,'+encode64(encoder.stream().getData());
-  	window.open(dat);
+  	// var dat = 'data:image/gif;base64,'+encode64(encoder.stream().getData());
+		// window.open(dat);
+		
+		var byteString = atob(encode64(encoder.stream().getData()));
+		var mimeString = "image/gif"
+		var ab = new ArrayBuffer(byteString.length);
+		var ia = new Uint8Array(ab);
+		for (var i = 0; i < byteString.length; i++) {
+				ia[i] = byteString.charCodeAt(i);
+		}
+		var blob = new Blob([ab], {type: mimeString});
+		window.open(URL.createObjectURL(blob))
   	
   	unitTesting = false;
 
