@@ -1,5 +1,5 @@
 #!/bin/bash 
-node-qunit-phantomjs  tests/tests.html --timeout 40
+#node-qunit-phantomjs  tests/tests.html --timeout 40
 echo ===========================
 start=`date +%s`
 echo clearing whitepsace from demos
@@ -122,6 +122,8 @@ rm commit
 cd ../src
 end=`date +%s`
 runtime=$((end-start))
+time=`date "+%H:%M:%S"`
+echo script end time : $time 
 echo script took $runtime seconds
 echo ===========================
 

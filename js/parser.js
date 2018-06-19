@@ -108,6 +108,32 @@ function blankLineHandle(state) {
     }
 }
 
+//for IE support
+if (typeof Object.assign != 'function') {
+  (function () {
+    Object.assign = function (target) {
+      'use strict';
+      // We must check against these specific cases.
+      if (target === undefined || target === null) {
+        throw new TypeError('Cannot convert undefined or null to object');
+      }
+ 
+      var output = Object(target);
+      for (var index = 1; index < arguments.length; index++) {
+        var source = arguments[index];
+        if (source !== undefined && source !== null) {
+          for (var nextKey in source) {
+            if (source.hasOwnProperty(nextKey)) {
+              output[nextKey] = source[nextKey];
+            }
+          }
+        }
+      }
+      return output;
+    };
+  })();
+}
+
 var codeMirrorFn = function() {
     'use strict';
 
@@ -529,6 +555,7 @@ var codeMirrorFn = function() {
                             {
                                 //LOOK FOR COLOR
                                 state.tokenIndex = 0;
+
                                 var match_color = stream.match(reg_color, true);
                                 if (match_color == null) {
                                     var str = stream.match(reg_name, true) || stream.match(reg_notcommentstart, true);
@@ -547,7 +574,7 @@ var codeMirrorFn = function() {
                                     } else if (candcol==="transparent") {
                                         return 'COLOR FADECOLOR';
                                     } else {
-                                        return 'COLOR';
+                                        return 'MULTICOLOR'+match_color[0];
                                     }
                                 }
                                 break;
