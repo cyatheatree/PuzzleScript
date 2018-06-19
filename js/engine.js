@@ -18,7 +18,7 @@ var intro_template = [
 	"..................................",
 	"..................................",
 	"......Puzzle Script Terminal......",
-	"..............v 1.0...............",
+	"..............v 1.6...............",
 	"..................................",
 	"..................................",
 	"..................................",
@@ -562,6 +562,37 @@ function level4Serialization() {
 	return ret;
 }
 
+
+function tryDeactivateYoutube(){
+	var youtubeFrame = document.getElementById("youtubeFrame");
+	if (youtubeFrame){
+		document.body.removeChild(youtubeFrame);
+	}
+}
+
+function tryActivateYoutube(){
+	var youtubeFrame = document.getElementById("youtubeFrame");
+	if (youtubeFrame){
+		return;
+	}
+	if (canYoutube) {
+		if ('youtube' in state.metadata) {
+			var youtubeid=state.metadata['youtube'];
+			var url = "https://www.youtube.com/embed/"+youtubeid+"?autoplay=1&loop=1&playlist="+youtubeid;
+			ifrm = document.createElement("IFRAME");
+			ifrm.setAttribute("src",url);
+			ifrm.setAttribute("id","youtubeFrame");
+			ifrm.style.visibility="hidden";
+			ifrm.style.width="500px";
+			ifrm.style.height="500px";
+			ifrm.style.position="absolute";
+			ifrm.style.top="-1000px";
+			ifrm.style.left="-1000px";
+			document.body.appendChild(ifrm);
+		}
+	}
+}
+
 function setGameState(_state, command, randomseed) {
 	oldflickscreendat=[];
 	timer=0;
@@ -588,7 +619,6 @@ function setGameState(_state, command, randomseed) {
 
 	state = _state;
 
-    window.console.log('setting game state :D ');
     if (command[0]!=="rebuild"){
     	backups=[];
     }
@@ -705,52 +735,10 @@ function setGameState(_state, command, randomseed) {
 	canvasResize();
 
 
-
-	if (canYoutube) {
-		if ('youtube' in state.metadata) {
-			var youtubeid=state.metadata['youtube'];
-			var url = "https://www.youtube.com/embed/"+youtubeid+"?autoplay=1&loop=1&playlist="+youtubeid;
-			ifrm = document.createElement("IFRAME");
-			ifrm.setAttribute("src",url);
-			ifrm.style.visibility="hidden";
-			ifrm.style.width="500px";
-			ifrm.style.height="500px";
-			ifrm.style.position="absolute";
-			ifrm.style.top="-1000px";
-			ifrm.style.left="-1000px";
-//			ifrm.style.display="none";
-			document.body.appendChild(ifrm);
-		}
-
-		/*
-		if ('youtube' in state.metadata) {
-			var div_container = document.createElement('DIV');
-			var div_front = document.createElement('DIV');
-			div_front.style.zIndex=-100;	
-			div_front.style.backgroundColor=state.bgcolor;
-			div_front.style.position= "absolute";
-			div_front.style.width="500px";
-			div_front.style.height="500px";
-			var div_back = document.createElement('DIV');
-			div_back.style.zIndex=-200;
-			div_back.style.position= "absolute";
-			
-			div_container.appendChild(div_back);
-			div_container.appendChild(div_front);
-			
-			var youtubeid=state.metadata['youtube'];
-			var url = "https://youtube.googleapis.com/v/"+youtubeid+"?autoplay=1&loop=1&playlist="+youtubeid;
-			ifrm = document.createElement("IFRAME");
-			ifrm.setAttribute("src",url);
-			ifrm.style.visibility="hidden";
-			ifrm.style.width="500px";
-			ifrm.style.height="500px";
-			ifrm.frameBorder="0";
-//			ifrm.style.display="none";
-
-			div_back.appendChild(ifrm);
-			document.body.appendChild(div_container);
-			*/
+	if (state.sounds.length==0&&state.metadata.youtube==null){
+		killAudioButton();
+	} else {
+		showAudioButton();
 	}
 	
 }
@@ -2208,7 +2196,7 @@ function calculateRowColMasks() {
 }
 
 /* returns a bool indicating if anything changed */
-function processInput(dir,dontCheckWin,dontModify) {
+function processInput(dir,dontDoWin,dontModify) {
 	againing = false;
 
 	if (verbose_logging) { 
@@ -2409,11 +2397,14 @@ function processInput(dir,dontCheckWin,dontModify) {
 			}
 	    }
 
-	    if (textMode===false && (dontCheckWin===undefined ||dontCheckWin===false)) {
+	    if (textMode===false) {
 	    	if (verbose_logging) { 
 	    		consolePrint('Checking win condition.');
 			}
-	    	checkWin();
+			if (dontDoWin===undefined){
+				dontDoWin = false;
+			}
+	    	checkWin( dontDoWin );
 	    }
 
 	    if (!winning) {
@@ -2469,15 +2460,17 @@ function processInput(dir,dontCheckWin,dontModify) {
 	return modified;
 }
 
-function checkWin() {
+function checkWin(dontDoWin) {
 
 	if (levelEditorOpened) {
-		return;
+		dontDoWin=true;
 	}
 
 	if (level.commandQueue.indexOf('win')>=0) {
 		consolePrint("Win Condition Satisfied");
-		DoWin();
+		if(!dontDoWin){
+			DoWin();
+		}
 		return;
 	}
 
@@ -2541,7 +2534,9 @@ function checkWin() {
 
 	if (won) {
 		consolePrint("Win Condition Satisfied");
-		DoWin();
+		if (!dontDoWin){
+			DoWin();
+		}
 	}
 }
 

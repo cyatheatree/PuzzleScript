@@ -43,7 +43,7 @@ function logErrorCacheable(str, lineNumber,urgent) {
 function logError(str, lineNumber,urgent) {
     if (compiling||urgent) {
         if (lineNumber === undefined) {
-            return logErrorNoLine(str);
+            return logErrorNoLine(str,urgent);
         }
         var errorString = '<a onclick="jumpToLine(' + lineNumber.toString() + ');"  href="javascript:void(0);"><span class="errorTextLineNumber"> line ' + lineNumber.toString() + '</span></a> : ' + '<span class="errorText">' + str + '</span>';
          if (errorStrings.indexOf(errorString) >= 0 && !urgent) {
@@ -167,7 +167,7 @@ var codeMirrorFn = function() {
     var reg_notcommentstart = /[^\(]+/;
     var reg_csv_separators = /[ \,]*/;
     var reg_soundverbs = /(move|action|create|destroy|cantmove|undo|restart|titlescreen|startgame|cancel|endgame|startlevel|endlevel|showmessage|closemessage|sfx0|sfx1|sfx2|sfx3|sfx4|sfx5|sfx6|sfx7|sfx8|sfx9|sfx10)\s+/;
-    var reg_directions = /^(action|up|down|left|right|\^|v|\<|\>|forward|moving|stationary|parallel|perpendicular|horizontal|orthogonal|vertical|no|randomdir|random)$/;
+    var reg_directions = /^(action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpendicular|horizontal|orthogonal|vertical|no|randomdir|random)$/;
     var reg_loopmarker = /^(startloop|endloop)$/;
     var reg_ruledirectionindicators = /^(up|down|left|right|horizontal|vertical|orthogonal|late|rigid)$/;
     var reg_sounddirectionindicators = /\s*(up|down|left|right|horizontal|vertical|orthogonal)\s*/;
@@ -230,6 +230,8 @@ var codeMirrorFn = function() {
               winConditionsCopy.push(state.winconditions[i].concat([]));
             }
 
+            var original_case_namesCopy = Object.assign({},state.original_case_names);
+            
             var nstate = {
               lineNumber: state.lineNumber,
 
@@ -256,6 +258,8 @@ var codeMirrorFn = function() {
               names: state.names.concat([]),
 
               winconditions: winConditionsCopy,
+
+              original_case_names : original_case_namesCopy,
 
               abbrevNames: state.abbrevNames.concat([]),
 
@@ -290,6 +294,19 @@ var codeMirrorFn = function() {
                     state.lineNumber++;
                 }*/
 
+            }
+
+            function registerOriginalCaseName(candname){
+
+                function escapeRegExp(str) {
+                  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+                }
+
+                var nameFinder =  new RegExp("\\b"+escapeRegExp(candname)+"\\b","i")
+                var match = mixedCase.match(nameFinder);
+                if (match!=null){
+                    state.original_case_names[candname] = match[0];
+                }
             }
 
             stream.eatWhile(/[ \t]/);
@@ -473,13 +490,16 @@ var codeMirrorFn = function() {
 
                                 if (sol) {
                                 	state.objects_candname = candname;
+                                    registerOriginalCaseName(candname);
                                 	state.objects[state.objects_candname] = {
 										                                	lineNumber: state.lineNumber,
 										                                	colors: [],
 										                                	spritematrix: []
 										                                };
+
 								} else {
 									//set up alias
+                                    registerOriginalCaseName(candname);
 									var synonym = [candname,state.objects_candname];
 									synonym.lineNumber = state.lineNumber;
 									state.legend_synonyms.push(synonym);
@@ -756,6 +776,8 @@ var codeMirrorFn = function() {
                             } */ else if (splits.length === 3) {
                                 var synonym = [splits[0], splits[2].toLowerCase()];
                                 synonym.lineNumber = state.lineNumber;
+
+                                registerOriginalCaseName(splits[0]);
                                 state.legend_synonyms.push(synonym);
                             } else if (splits.length % 2 === 0) {
                                 ok = false;
@@ -803,6 +825,8 @@ var codeMirrorFn = function() {
                                             newlegend = newlegend.concat(substitutor(splits[i]));
                                         }
                                         newlegend.lineNumber = state.lineNumber;
+
+                                        registerOriginalCaseName(newlegend[0]);
                                         state.legend_aggregates.push(newlegend);
                                     }
                                 } else if (lowertoken === 'or') {
@@ -847,6 +871,8 @@ var codeMirrorFn = function() {
                                             newlegend.push(splits[i].toLowerCase());
                                         }
                                         newlegend.lineNumber = state.lineNumber;
+
+                                        registerOriginalCaseName(newlegend[0]);
                                         state.legend_properties.push(newlegend);
                                     }
                                 } else {
@@ -1121,7 +1147,7 @@ var codeMirrorFn = function() {
 		                    			state.tokenIndex=-1;
 		                    			return 'METADATA';
 		                    		} else  {
-		                    			logError('Unrecognised stuff in metadata section.', state.lineNumber);
+		                    			logError('Unrecognised stuff in the prelude.', state.lineNumber);
 		                    			return 'ERROR';
 		                    		}
 		                    	} else if (state.tokenIndex==-1) {
@@ -1183,6 +1209,8 @@ var codeMirrorFn = function() {
 
                 winconditions: [],
                 metadata: [],
+
+                original_case_names: {},
 
                 abbrevNames: [],
 

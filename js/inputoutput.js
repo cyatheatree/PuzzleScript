@@ -369,7 +369,11 @@ function onKeyDown(event) {
 		prevent(event);
 	}
 
+	if ((!IDE) && event.keyCode===77){//m
+		toggleMute();		
+	}
 
+	
     if (keybuffer.indexOf(event.keyCode)>=0) {
     	return;
     }
@@ -519,6 +523,11 @@ function checkKey(e,justPressed) {
 //            window.console.log("DOWN");
             inputdir=2;
         break;
+        }
+        case 80://p
+        {
+			printLevel();
+        	break;
         }
         case 13://enter
         case 32://space
